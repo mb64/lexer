@@ -20,7 +20,7 @@ ghc-options:         -Wall -Wextra
 executable lexer
   main-is:             Main.hs
   default-extensions:  DeriveFunctor, NumericUnderscores, LambdaCase, BlockArguments, ScopedTypeVariables, TupleSections
-  other-modules:       NFA, DFA
+  other-modules:       NFA, DFA, Regex
   -- other-extensions:
   build-depends:       base >=4.14 && <4.15, containers, unordered-containers, intern >=0.9 && <0.10, mtl, interpolate
   hs-source-dirs:      src

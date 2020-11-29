@@ -1,6 +1,5 @@
 module NFA where
 
--- import qualified Data.Interned.IntSet
 import Control.Exception (assert)
 import Data.Char
 import Data.IntMap (IntMap)

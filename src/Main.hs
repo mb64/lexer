@@ -4,31 +4,26 @@ module Main where
 
 import NFA
 import DFA
+import Regex
 
 import Data.String.Interpolate (i)
 import Data.Char
 import Data.List
+import Data.Maybe
 import qualified Data.IntMap.Lazy as IMap
 import qualified Data.HashMap.Lazy as HMap
 import qualified Data.Interned.IntSet as ISet
+import Text.ParserCombinators.ReadP (readP_to_S)
 
-comment :: DiffNFA String
-comment = allOf
-    [ char '/'
-    , char '*'
-    , star (anyOf [char 'a', char 'b', char 'c', char '/', allOf [char '*', anyOf (map char "abc*")]])
-    , char '*'
-    , char '/'
-    , token "COMMENT"
-    ]
-ident :: DiffNFA String
-ident = plus (anyOf $ map char "abc") . token "IDENT"
+regex :: String -> DiffNFA t
+regex = fst . fromJust . find (null . snd) . readP_to_S regexParser
+
 nfa :: NFA String
 nfa = anyOf
-    [ comment
-    , ident
-    , allOf [char '/', token "DIV"]
-    , allOf [char '*', token "MUL"]
+    [ regex "/\\*([abc/]|\\**[abc])*\\*/"   . token "COMMENT"
+    , regex "[abc]+"                        . token "IDENT"
+    , regex "/"                             . token "DIV"
+    , regex "\\*"                           . token "MUL"
     ] emptyNFA
 
 dfa :: DFA String
