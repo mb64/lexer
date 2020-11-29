@@ -3,7 +3,7 @@ shared: True
 executable-dynamic: True
 
 package *
-  ghc-options: -dynamic
+  ghc-options: -dynamic -Wall -Wextra
 
 program-options
-  ghc-options: -dynamic
+  ghc-options: -dynamic -Wall -Wextra

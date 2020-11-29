@@ -6,7 +6,6 @@ import Data.Char
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IMap
 import Data.List
-import qualified Data.Map
 import Data.Maybe
 import Data.Word
 
@@ -24,7 +23,7 @@ toByte c = if ord c < 256
            then fromIntegral (ord c)
            else error ("not a byte: " ++ show c)
 
--- Matches the empty string
+-- | Matches the empty string
 emptyNFA :: NFA t
 emptyNFA = NFA 0 0 $ IMap.fromList [(0, [])]
 
@@ -32,7 +31,13 @@ emptyNFA = NFA 0 0 $ IMap.fromList [(0, [])]
 -- Convert DiffNFA to NFA by passing it `empty`
 type DiffNFA t = NFA t -> NFA t
 
--- Standard regex combinators
+-- | Matches the empty string, but gives out this token when it does
+token :: t -> DiffNFA t
+token t (NFA start end trans) = NFA start' end trans'
+  where start' = (1+) $ fst $ fromJust $ IMap.lookupMax trans
+        trans' = IMap.insert start' [(Nothing, Just t, start)] trans
+
+-- | # Standard regex combinators
 
 -- | `byte b` matches the single byte `b`
 byte :: Byte -> DiffNFA t
@@ -58,7 +63,7 @@ anyOf xs next@(NFA start end _) = NFA start'' end trans''
 
         -- Connect all the starts together in a new start node
         start'' = (1+) $ fst $ fromJust $ IMap.lookupMax trans'
-        trans'' = IMap.insert start'' [(Nothing, Nothing, start) | start <- starts] trans'
+        trans'' = IMap.insert start'' [(Nothing, Nothing, start') | start' <- starts] trans'
 
 -- | `choice a b == anyOf [a,b]` matches either a or b
 -- a|b
