@@ -11,6 +11,8 @@ import qualified Data.IntMap.Lazy as IMap
 import qualified Data.HashMap.Lazy as HMap
 import qualified Data.Interned.IntSet as ISet
 
+-- import Debug.Trace
+
 -- Interned, hash-consed int sets
 -- who knew this would be a useful thing to have
 type DState = ISet.IntSet {- NState -}
@@ -34,7 +36,7 @@ nfaToDfa (NFA start _ nfaTrans) = DFA dstart $ addDState dstart HMap.empty
             (Nothing, t, s) -> let (t', ds) = epsilons IMap.! s
                                in (t <> t', [ds])
             _ -> (Nothing, []) -- mempty
-        
+
         addDState :: DState -> Transitions t -> Transitions t
         addDState ds trans
           | ds `HMap.member` trans = trans
@@ -65,22 +67,23 @@ deref ds unifs | Just ds' <- HMap.lookup ds unifs = deref ds' unifs
 
 unify :: Eq t => DState -> DState -> Transitions t -> UnifyM ()
 unify a b trans = do
-  let as = trans HMap.! a
-      bs = trans HMap.! b
-  guard $ IMap.keys as == IMap.keys bs
+  a' <- gets $ deref a
+  b' <- gets $ deref b
+  if a' == b' then pure () else do
+    let as = trans HMap.! a
+        bs = trans HMap.! b
+    guard $ IMap.keys as == IMap.keys bs
 
-  -- optimistically assume they can be unified
-  let ab = a `ISet.union` b
-  unless (a == ab) $ modify $ HMap.insert a ab
-  unless (b == ab) $ modify $ HMap.insert b ab
+    -- optimistically assume they can be unified
+    let ab = a' `ISet.union` b'
+    unless (a == ab) $ modify $ HMap.insert a' ab
+    unless (b == ab) $ modify $ HMap.insert b' ab
 
-  forM_ (IMap.keys as) \ch -> do
-    (ta,va) <- traverse (gets . deref) $ as IMap.! ch
-    (tb,vb) <- traverse (gets . deref) $ bs IMap.! ch
-    guard $ ta == tb
-    if va == vb
-      then pure ()
-      else unify va vb trans
+    forM_ (IMap.keys as) \ch -> do
+      let (ta,va) = as IMap.! ch
+          (tb,vb) = bs IMap.! ch
+      guard $ ta == tb
+      unify va vb trans
 
 pairs :: [a] -> [(a,a)]
 pairs [] = []
@@ -96,25 +99,18 @@ minDfa (DFA start trans) = DFA newStart newTrans
         newTrans = addDState newStart HMap.empty
 
         addDState :: DState -> Transitions t -> Transitions t
-        addDState ds trans'
-          | ds `HMap.member` trans' = trans'
-          | otherwise =
+        addDState ds trans' =
+          let ds' = deref ds allUnifs
+          in if ds' `HMap.member` trans' then trans' else
             let thisTrans :: IntMap {- Byte -} (Maybe t, DState)
                 thisTrans = fmap (second \s -> deref s allUnifs)
                   $ trans HMap.! ds
-                trans'' = HMap.insert ds thisTrans trans'
+                trans'' = HMap.insert ds' thisTrans trans'
             in foldl' (flip addDState) trans''
                 $ map snd
-                $ IMap.elems thisTrans
+                $ IMap.elems (trans HMap.! ds)
 
         go :: HMap.HashMap DState DState
            -> (DState, DState)
            -> HMap.HashMap DState DState
-        go unifs (a,b) =
-          let a' = deref a unifs
-              b' = deref b unifs
-          in if a' == b'
-             then unifs
-             else fromMaybe unifs $ execStateT (unify a' b' trans) unifs
-
-
+        go unifs (a,b) = fromMaybe unifs $ execStateT (unify a b trans) unifs
