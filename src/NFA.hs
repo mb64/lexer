@@ -14,7 +14,7 @@ type NState = Int
 data NFA t = NFA
   { startState  :: NState
   , endState    :: NState
-  , transitions :: IntMap {- NState -} [(Maybe Byte, Maybe t, NState)]
+  , transitions :: IntMap {- NState -} [(Maybe (Byte,Byte), Maybe t, NState)]
   } deriving (Show, Functor)
 
 toByte :: Char -> Byte
@@ -30,24 +30,22 @@ emptyNFA = NFA 0 0 $ IMap.fromList [(0, [])]
 -- Convert DiffNFA to NFA by passing it `empty`
 type DiffNFA t = NFA t -> NFA t
 
+someNode :: Maybe (Byte,Byte) -> Maybe t -> DiffNFA t
+someNode b t (NFA start end trans) = NFA start' end trans'
+  where start' = (1+) $ fst $ fromJust $ IMap.lookupMax trans
+        trans' = IMap.insert start' [(b, t, start)] trans
+
 -- | Matches the empty string, but gives out this token when it does
 token :: t -> DiffNFA t
-token t (NFA start end trans) = NFA start' end trans'
-  where start' = (1+) $ fst $ fromJust $ IMap.lookupMax trans
-        trans' = IMap.insert start' [(Nothing, Just t, start)] trans
+token t = someNode Nothing (Just t)
 
 -- | # Standard regex combinators
 
--- | `byte b` matches the single byte `b`
-byte :: Byte -> DiffNFA t
-byte b (NFA start end trans) = NFA start' end trans'
+-- | `byteRanges [(start,end)]` matches all bytes between start and end
+byteRanges :: [(Byte,Byte)] -> DiffNFA t
+byteRanges bs (NFA start end trans) = NFA start' end trans'
   where start' = (1+) $ fst $ fromJust $ IMap.lookupMax trans
-        trans' = IMap.insert start' [(Just b, Nothing, start)] trans
-
--- | `char c` matches the single (byte) char `c`
--- char == byte . toByte
-char :: Char -> DiffNFA t
-char = byte . toByte
+        trans' = IMap.insert start' [(Just b, Nothing, start) | b <- bs] trans
 
 allOf :: [DiffNFA t] -> DiffNFA t
 allOf = foldl' (.) id
@@ -69,19 +67,21 @@ anyOf xs next@(NFA start end _) = NFA start'' end trans''
 choice :: DiffNFA t -> DiffNFA t -> DiffNFA t
 choice a b = anyOf [a,b]
 
--- | kleen star: zero or more copies
--- regex*
-star :: DiffNFA t -> DiffNFA t
-star a next = assert (end == endState next) $ NFA start end trans'
-  where NFA start end trans = a next
-        -- connect the end of a (start of next) to the start
-        endOfA = startState next
+-- | one or more copies
+-- regex+
+plus :: DiffNFA t -> DiffNFA t
+plus a next = assert (end == endState next) $ NFA start end trans'
+  where -- Add a buffer node with ε transition
+        next' = someNode Nothing Nothing next
+        NFA start end trans = a next'
+        -- connect the end of a (before start of next) to the start
+        endOfA = startState next'
         trans' = IMap.adjust ((Nothing, Nothing, start):) endOfA trans
 
--- | one or more copies
--- regex+ == regex regex*
-plus :: DiffNFA t -> DiffNFA t
-plus a = a . (star a)
+-- | kleen star -- zero or more copies
+-- regex* == regex+?
+star :: DiffNFA t -> DiffNFA t
+star a = option (plus a)
 
 -- | Zero or one copies
 -- regex? == ε | regex

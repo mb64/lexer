@@ -15,13 +15,13 @@ maintainer:          mark.l.barbone@gmail.com
 -- category:
 build-type:          Simple
 extra-source-files:  CHANGELOG.md
-ghc-options:         -Wall -Wextra
 
 executable lexer
   main-is:             Main.hs
-  default-extensions:  DeriveFunctor, NumericUnderscores, LambdaCase, BlockArguments, ScopedTypeVariables, TupleSections
-  other-modules:       NFA, DFA, Regex
+  default-extensions:  DeriveFunctor, DeriveFoldable, DeriveTraversable, NumericUnderscores, LambdaCase, BlockArguments, ScopedTypeVariables, TupleSections
+  other-modules:       NFA, DFA, Regex, Interval
   -- other-extensions:
   build-depends:       base >=4.14 && <4.15, containers, unordered-containers, intern >=0.9 && <0.10, mtl, interpolate
   hs-source-dirs:      src
   default-language:    Haskell2010
+  ghc-options:         -Wall -Wextra
