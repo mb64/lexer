@@ -1,0 +1,6 @@
+packages: .
+
+source-repository-package
+  type: git
+  location: git://github.com/mb64/intern.git
+  tag: 4b04dac86a8d6663cd61736cc763d48da286a616

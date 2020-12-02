@@ -18,10 +18,17 @@ extra-source-files:  CHANGELOG.md
 
 executable lexer
   main-is:             Main.hs
-  default-extensions:  DeriveFunctor, DeriveFoldable, DeriveTraversable, NumericUnderscores, LambdaCase, BlockArguments, ScopedTypeVariables, TupleSections
-  other-modules:       NFA, DFA, Regex, Interval
+  default-extensions:  DeriveFunctor, DeriveFoldable, DeriveTraversable, NumericUnderscores, LambdaCase, BlockArguments, ScopedTypeVariables, TupleSections, ImportQualifiedPost
+  other-modules:       NFA, DFA, Regex, Interval, Graphviz
   -- other-extensions:
-  build-depends:       base >=4.14 && <4.15, containers, unordered-containers, intern >=0.9 && <0.10, mtl, interpolate
+  build-depends:       base >=4.14 && <4.15,
+                       containers,
+                       unordered-containers,
+                       intern >=0.9 && <0.10,
+                       mtl,
+                       interpolate,
+                       graphviz >=2999.20.1.0,
+                       text
   hs-source-dirs:      src
   default-language:    Haskell2010
   ghc-options:         -Wall -Wextra

@@ -44,7 +44,7 @@ nfaToDfa (NFA start _ nfaTrans) = DFA dstart $ addDState dstart HMap.empty
           | ds `HMap.member` trans = trans
           | otherwise =
             let thisTrans :: I.Map {- Byte range -} (Maybe t, DState)
-                thisTrans = fmap (\(t, es) -> (t, ISet.unions es))
+                thisTrans = fmap (second ISet.unions)
                   $ I.fromListWith (<>)
                   $ mapMaybe \case
                       -- we already handled the ε transitions, only take the real ones
@@ -97,6 +97,8 @@ pairs (x:xs) = map (x,) xs ++ pairs xs
 
 -- | Minimize the DFA
 -- O(should be faster)
+-- TODO: implement a legit O(n²) algorithm
+-- https://en.wikipedia.org/wiki/DFA_minimization
 minDfa :: forall t. Eq t => DFA t -> DFA t
 minDfa (DFA start trans) = DFA newStart newTrans
   where allUnifs = foldl' go mempty (pairs $ HMap.keys trans)
