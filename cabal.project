@@ -2,5 +2,5 @@ packages: .
 
 source-repository-package
   type: git
-  location: git://github.com/mb64/intern.git
-  tag: 4b04dac86a8d6663cd61736cc763d48da286a616
+  location: git://github.com/ekmett/intern.git
+  tag: 42aaa801af38c3542d69da9ce33014662b36f67d

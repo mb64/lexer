@@ -39,6 +39,14 @@ someNode b t (NFA start end trans) = NFA start' end trans'
 token :: t -> DiffNFA t
 token t = someNode Nothing (Just t)
 
+-- | Matches the empty string, but goes back to the start node instead of
+-- continuing to the next thing
+-- The first argument is the start node id, lazily pull it from the future
+skipTo :: Int -> t -> DiffNFA t
+skipTo start t (NFA _ end trans) = NFA start' end trans'
+  where start' = (1+) $ fst $ fromJust $ IMap.lookupMax trans
+        trans' = IMap.insert start' [(Nothing, Just t, start)] trans
+
 -- | # Standard regex combinators
 
 -- | `byteRanges [(start,end)]` matches all bytes between start and end
@@ -86,4 +94,4 @@ star a = option (plus a)
 -- | Zero or one copies
 -- regex? == ε | regex
 option :: DiffNFA t -> DiffNFA t
-option a = choice id a
+option a = choice a id

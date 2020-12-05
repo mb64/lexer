@@ -58,4 +58,9 @@ rangeChar = toByte <$> escaped "^-[]*+?|()\\"
 
 escaped :: String -> ReadP Char
 escaped special = satisfy (`notElem` special)
-  <|> char '\\' *> satisfy (`elem` special)
+  <|> char '\\' *> (satisfy (`elem` special) <|> escapeCodes)
+
+escapeCodes :: ReadP Char
+escapeCodes = char 'n' $> '\n'
+          <|> char 't' $> '\t'
+          <|> char 'r' $> '\r'

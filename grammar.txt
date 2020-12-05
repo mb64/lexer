@@ -1,0 +1,13 @@
+// whitespace and comments
+--      [ \t\n]
+--      /\*([^\*]|\*+[^\*/])*\*+/
+--      //[^\n]*\n
+
+// operators
+PLUS    \+
+MINUS   -
+MUL     \*
+DIV     /
+
+IDENT   [a-zA-Z][a-zA-Z0-9_]*
+INTEGER [0-9][0-9_]*

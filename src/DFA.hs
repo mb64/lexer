@@ -104,7 +104,7 @@ minDfa (DFA start trans) = DFA newStart newTrans
   where allUnifs = foldl' go mempty (pairs $ HMap.keys trans)
 
         newStart = deref start allUnifs
-        newTrans = addDState newStart HMap.empty
+        newTrans = addDState start HMap.empty
 
         addDState :: DState -> Transitions t -> Transitions t
         addDState ds trans' =

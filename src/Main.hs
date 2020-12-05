@@ -1,32 +1,27 @@
 module Main where
 
-import Prelude hiding (putStrLn)
-
-import NFA
 import DFA
-import Regex
+import Parser
 import Graphviz
 
-import Data.List
-import Data.Maybe
-import Data.Text.Lazy.IO
-import Text.ParserCombinators.ReadP (readP_to_S)
+import Data.Foldable
+import Data.Text.Lazy.IO qualified as T
 
-regex :: String -> DiffNFA t
-regex = fst . fromJust . find (null . snd) . readP_to_S regexParser
-
-nfa :: NFA String
-nfa = anyOf
-    [ regex "/\\*([^\\*]|\\*+[^\\*/])*\\*+/"  . token "SKIP"
-    , regex "[a-zA-Z0-9][a-zA-Z0-9_]*"        . token "IDENT"
-    , regex "/"                               . token "DIV"
-    , regex "\\*"                             . token "MUL"
-    , regex "//[^\n]*\n"                      . token "SKIP"
-    , regex "[ \t\n]+"                        . token "SKIP"
-    ] emptyNFA
-
-dfa :: DFA String
-dfa = minDfa $ nfaToDfa nfa
+run :: FilePath -> IO ()
+run fileName = do
+  contents <- readFile fileName
+  case parseFile contents of
+    Right nfa -> do
+      let dfa = nfaToDfa nfa
+      -- T.putStrLn $ renderNfa nfa
+      -- T.putStrLn $ renderDfa dfa
+      T.putStrLn $ renderDfa $ minDfa dfa
+    Left [e] -> do
+      putStrLn $ "Error parsing " ++ fileName ++ ":"
+      putStrLn e
+    Left errs -> do
+      putStrLn $ show (length errs) ++ " errors parsing " ++ fileName ++ ":"
+      traverse_ putStrLn errs
 
 main :: IO ()
-main = putStrLn $ renderDfa dfa
+main = run "grammar.txt"
