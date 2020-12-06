@@ -34,7 +34,13 @@ codegen dfa = [cunit|
     int token_type;
   } LexResult;
 
-  static LexResult next_token(const char *const text, typename size_t start, typename size_t const len) {
+  static LexResult next_token(const unsigned char *const text, typename size_t start, typename size_t const len) {
+    if (start >= len) return (LexResult) {
+      .start = start,
+      .end = len,
+      .token_type = T_EOF,
+    };
+
     typename bool has_fallback = false;
     typename bool fallback_is_skip = false;
     typename size_t fallback_end;
@@ -45,41 +51,40 @@ codegen dfa = [cunit|
     goto $id:(labelName $ startState dfa);
 
     $stms:(concatMap (uncurry (state dfa)) $ HMap.toList $ transitions dfa)
-  }
-  |]
 
-state :: DFA Token -> DState -> I.Map {- Byte range -} (Maybe Token, DState) -> [Stm]
-state dfa s m = [cstms|
-  $id:(labelName s):
-    if (i >= len) {
+    error_state:
       if (has_fallback) {
         if (fallback_is_skip) {
           has_fallback = false;
           start = fallback_end;
           goto $id:(labelName $ startState dfa);
         } else {
-          return (typename LexResult) {
+          return (LexResult) {
             .start = start,
             .end = fallback_end,
             .token_type = fallback_token,
           };
         }
       } else {
-        return (typename LexResult) {
+        return (LexResult) {
           .start = start,
           .end = i,
-          .token_type = ERROR,
+          .token_type = T_ERROR,
         };
       }
-    }
+  }
+  |]
+
+state :: DFA Token -> DState -> I.Map {- Byte range -} (Maybe Token, DState) -> [Stm]
+state dfa s _ | isEndState dfa s = []
+state dfa s m = [cstms|
+  $id:(labelName s):
+    if (i >= len)
+      goto error_state;
     switch (text[i++]) {
       $stms:(concatMap (transition dfa) $ I.toList m)
       default:
-        return (typename LexResult) {
-          .start = start,
-          .end = i,
-          .token_type = ERROR,
-        };
+        goto error_state;
     }
   |]
 
@@ -87,7 +92,7 @@ transition :: DFA Token -> (Int, Int, (Maybe Token, DState)) -> [Stm]
 transition dfa (s,e,(Just tok,next))
   | isEndState dfa next, Just name <- tokName tok = [cstms|
     case $int:s ... $int:e:
-      return (typename TokenType) {
+      return (typename LexResult) {
         .start = start,
         .end = i,
         .token_type = $id:name,
@@ -98,6 +103,12 @@ transition dfa (s,e,(Just tok,next))
       // Skip
       start = i;
       has_fallback = false;
+      if (i == len)
+        return (typename LexResult) {
+          .start = start,
+          .end = len,
+          .token_type = T_EOF,
+        };
       goto $id:(labelName $ startState dfa);
     |]
   | Just name <- tokName tok = [cstms|

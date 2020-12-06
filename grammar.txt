@@ -1,13 +1,62 @@
 // whitespace and comments
---      [ \t\n]
---      /\*([^\*]|\*+[^\*/])*\*+/
---      //[^\n]*\n
+--              [ \t\n]
+--              /\*([^\*]|\*+[^\*/])*\*+/
+--              //[^\n]*
 
-// operators
-PLUS    \+
-MINUS   -
-MUL     \*
-DIV     /
+// Literals
+TLit            [0-9][0-9_]*
+TLit            0x[0-9a-fA-F][0-9a-fA-F_]*
+TLit            '\\''
+TLit            '\\\\'
+TLit            '\\n'
+TLit            '\\t'
+TLit            '[^\n'\\]'
 
-IDENT   [a-zA-Z][a-zA-Z0-9_]*
-INTEGER [0-9][0-9_]*
+// Grouping
+TOpenBrace      {
+TClosedBrace    }
+TOpenParen      \(
+TClosedParen    \)
+TOpenBracket    \[
+TClosedBracket  \]
+
+// Operators
+TPlus		\+
+TMinus		-
+TMul		\*
+TDiv		/
+TPlusEq		\+=
+TMinusEq	-=
+TMulEq		\*=
+TDivEq		/=
+TSemicolon	;
+TComma		,
+TAmpersand	&
+TComp		==
+TComp		!=
+TComp		<=
+TComp		>=
+TComp		<
+TComp		>
+TEq		=
+
+// Keywords
+TIf		if
+TElse		else
+TWhile		while
+TDo		do
+TLoop		loop
+TRet		return
+TInt		int
+TAlias		alias
+TVoid		void
+TAsm		asm
+TConst		const
+TTrue		true
+TFalse		false
+TInout		inout
+
+TString         "[^"]*"
+
+// This matches 123456, but it's OK bc that should be a TLit first
+TIdent          [a-zA-Z0-9_]+

@@ -22,7 +22,7 @@ renderNfa :: Show t => NFA t -> Text
 renderNfa n = render (pack . show) (NFA.startState n) (nfa n)
 
 renderDfa :: Show t => DFA t -> Text
-renderDfa d = render (pack . show . ISet.toList) (DFA.startState d) (dfa d)
+renderDfa d = render (pack . show . ISet.identity) (DFA.startState d) (dfa d)
 
 render :: (n -> Text) -> n -> Dot n -> Text
 render pr start g = renderDot $ toDot $ fmap pr $ digraph' $ do
