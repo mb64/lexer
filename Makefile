@@ -1,6 +1,12 @@
+EXE="./dist-newstyle/build/x86_64-linux/ghc-8.10.2/lexer-0.1.0.0/x/lexer/build/lexer/lexer"
+
+c:
+	cabal build
+	$(EXE) grammar.txt > output.c
+
 graph:
 	cabal build
-	./dist-newstyle/build/x86_64-linux/ghc-8.10.2/lexer-0.1.0.0/x/lexer/build/lexer/lexer | gvpack -u | dot -Tx11
+	$(EXE) -gv grammar.txt | gvpack -u | dot -Tx11
 
 # I can never remember the magic incantations to get Haskell to work on Arch
 configure:

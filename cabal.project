@@ -1,6 +1,14 @@
 packages: .
 
+-- PR #15 merged, not yet published
+-- Will probably be out in 0.9.4
 source-repository-package
   type: git
   location: git://github.com/ekmett/intern.git
   tag: 42aaa801af38c3542d69da9ce33014662b36f67d
+
+-- PR #88 not yet merged
+source-repository-package
+  type: git
+  location: git://github.com/mb64/language-c-quote.git
+  tag: d55a17bab5948abdcf3e0efb630898e589f4d13d

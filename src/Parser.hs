@@ -36,12 +36,15 @@ parseFile' start = \case
     . lines
 
 oneLine :: Int -> Int -> String -> Either String (DiffNFA Token)
-oneLine start n line = if not goodName
+oneLine _start n line = if not goodName
   then Left $ "Line "++show n++": bad token name "++name
   else case parsedRegex of
     Nothing -> Left $ "Line "++show n++": parse error in regex"
     Just (nfa,_) -> if name == "--"
-                    then Right $ nfa . skipTo start (Token n Nothing)
+                    then -- TODO: benchmark different approaches
+                         -- For now, it's easiest to not skip back to start
+                         -- Right $ nfa . skipTo start (Token n Nothing)
+                         Right $ nfa . token (Token n Nothing)
                     else Right $ nfa . token (Token n $ Just name)
   where (name,regex) = break isSpace line
         identChar c = c == '_' || isAlphaNum c

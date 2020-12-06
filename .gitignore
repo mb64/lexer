@@ -1,2 +1,4 @@
 dist
 dist-newstyle
+output.c
+cabal.project.local~
